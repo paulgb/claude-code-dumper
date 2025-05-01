@@ -145,7 +145,7 @@ impl ClaudeDatabase {
         )?;
 
         let root_ids = stmt.query_map([], |row| {
-            Ok(row.get::<_, String>(0)?) // uuid
+            row.get::<_, String>(0) // uuid
         })?;
 
         let mut root_messages = Vec::new();
@@ -267,7 +267,7 @@ impl ClaudeDatabase {
         )?;
 
         let child_ids = stmt.query_map([parent_id], |row| {
-            Ok(row.get::<_, String>(0)?) // uuid
+            row.get::<_, String>(0) // uuid
         })?;
 
         let mut children = Vec::new();
@@ -306,10 +306,9 @@ impl ClaudeDatabase {
                 messages.push(message.clone());
 
                 // Get the ID of the next message to process
-                current_id = match self.get_child_message(&id)? {
-                    Some(child) => Some(child.uuid().to_string()),
-                    None => None, // We've reached a leaf node
-                };
+                current_id = self
+                    .get_child_message(&id)?
+                    .map(|child| child.uuid().to_string());
             } else {
                 break;
             }
@@ -373,7 +372,7 @@ impl ClaudeDatabase {
             .prepare("SELECT summary FROM conversation_summaries WHERE leaf_uuid = ?")?;
 
         let result = stmt.query_row([leaf_id], |row| {
-            Ok(row.get::<_, String>(0)?) // summary
+            row.get::<_, String>(0) // summary
         });
 
         match result {

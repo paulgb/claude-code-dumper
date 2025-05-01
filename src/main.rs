@@ -73,7 +73,7 @@ fn main() -> Result<()> {
                         if args.raw {
                             println!("{}", tool_result.dimmed());
                         } else {
-                            format_json_output(&tool_result);
+                            format_json_output(tool_result);
                         }
                     }
                 }
@@ -147,9 +147,8 @@ fn main() -> Result<()> {
 
     // Add usage note after listing all conversations
     println!(
-        "{}: {}",
-        "Usage".yellow().bold(),
-        "To view a conversation, run: ./claude-viewer CONVERSATION_ID"
+        "{}: To view a conversation, run: ./claude-viewer CONVERSATION_ID",
+        "Usage".yellow().bold()
     );
 
     Ok(())
@@ -157,8 +156,8 @@ fn main() -> Result<()> {
 
 /// Format timestamp as a human-readable date and time
 fn format_timestamp(timestamp: i64) -> String {
-    let datetime = chrono::DateTime::from_timestamp(timestamp, 0)
-        .unwrap_or_else(|| chrono::DateTime::UNIX_EPOCH);
+    let datetime =
+        chrono::DateTime::from_timestamp(timestamp, 0).unwrap_or(chrono::DateTime::UNIX_EPOCH);
     datetime.format("%Y-%m-%d %H:%M:%S").to_string()
 }
 
@@ -174,7 +173,7 @@ fn truncate_string(s: &str, max_len: usize) -> String {
         }
 
         // Find the next character's starting position to determine where to cut
-        if let Some((next_idx, _)) = s.char_indices().skip(max_len).next() {
+        if let Some((next_idx, _)) = s.char_indices().nth(max_len) {
             end_idx = next_idx;
         }
 
