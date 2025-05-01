@@ -11,11 +11,11 @@ pub mod db;
 struct Args {
     /// Conversation ID to display
     conversation_id: Option<String>,
-    
+
     /// Raw output (no JSON formatting)
     #[arg(short, long)]
     raw: bool,
-    
+
     /// Custom database path (defaults to ~/.claude/__store.db)
     #[arg(short, long)]
     database_path: Option<String>,
@@ -24,36 +24,54 @@ struct Args {
 fn main() -> Result<()> {
     // Parse command line arguments
     let args = Args::parse();
-    
+
     // Create database connection with custom path if provided
     let db = ClaudeDatabase::connect_with_path(args.database_path.as_deref())?;
-    
+
     // If conversation_id is provided, display the conversation
     if let Some(id) = args.conversation_id {
-        println!("{}", format!("Displaying conversation with ID: {}", id).cyan().bold());
+        println!(
+            "{}",
+            format!("Displaying conversation with ID: {}", id)
+                .cyan()
+                .bold()
+        );
         println!("{}", "----------------------".cyan());
-        
+
         let messages = db.get_conversation(&id)?;
-        
+
         if messages.is_empty() {
-            println!("{}", "No messages found for this conversation ID.".red().bold());
+            println!(
+                "{}",
+                "No messages found for this conversation ID.".red().bold()
+            );
             return Ok(());
         }
-        
+
         for message in messages {
             match message {
-                Message::User { message, timestamp, tool_use_result, .. } => {
-                    println!("{}", format!("User [{}]:", format_timestamp(timestamp)).green().bold());
-                    
+                Message::User {
+                    message,
+                    timestamp,
+                    tool_use_result,
+                    ..
+                } => {
+                    println!(
+                        "{}",
+                        format!("User [{}]:", format_timestamp(timestamp))
+                            .green()
+                            .bold()
+                    );
+
                     if args.raw {
                         println!("{}", message);
                     } else {
                         format_json_output(&message);
                     }
-                    
+
                     if let Some(tool_result) = tool_use_result {
                         println!("\n{}", "Tool use result:".yellow().italic());
-                        
+
                         if args.raw {
                             println!("{}", tool_result.dimmed());
                         } else {
@@ -61,10 +79,27 @@ fn main() -> Result<()> {
                         }
                     }
                 }
-                Message::Assistant { message, timestamp, model, cost_usd, duration_ms, .. } => {
-                    println!("{}", format!("Assistant [{}] [{}] [${:.6}] [{}ms]:", 
-                        format_timestamp(timestamp), model, cost_usd, duration_ms).blue().bold());
-                    
+                Message::Assistant {
+                    message,
+                    timestamp,
+                    model,
+                    cost_usd,
+                    duration_ms,
+                    ..
+                } => {
+                    println!(
+                        "{}",
+                        format!(
+                            "Assistant [{}] [{}] [${:.6}] [{}ms]:",
+                            format_timestamp(timestamp),
+                            model,
+                            cost_usd,
+                            duration_ms
+                        )
+                        .blue()
+                        .bold()
+                    );
+
                     if args.raw {
                         println!("{}", message);
                     } else {
@@ -74,32 +109,40 @@ fn main() -> Result<()> {
             }
             println!("{}", "----------------------".cyan());
         }
-        
+
         return Ok(());
     }
-    
+
     // Print conversation summaries
     let mut summaries = db.get_conversation_summaries()?;
-    
+
     // Sort conversations by timestamp chronologically
     summaries.sort_by(|a, b| a.2.cmp(&b.2));
-    
+
     println!("{}", "Conversation Summaries:".cyan().bold());
     println!("{}", "----------------------".cyan());
     for (id, summary_text, timestamp, first_message) in summaries {
         // Truncate first message to first 50 characters using the helper function
         let truncated_message = truncate_string(&first_message, 50);
-        
+
         println!("{}: {}", "ID".yellow().bold(), id);
         println!("{}: {}", "Summary".yellow().bold(), summary_text);
-        println!("{}: {}", "Timestamp".yellow().bold(), format_timestamp(timestamp));
+        println!(
+            "{}: {}",
+            "Timestamp".yellow().bold(),
+            format_timestamp(timestamp)
+        );
         println!("{}: {}", "First Message".yellow().bold(), truncated_message);
         println!("{}", "----------------------".cyan());
     }
-    
+
     // Add usage note after listing all conversations
-    println!("{}: {}", "Usage".yellow().bold(), "To view a conversation, run: ./claude-viewer CONVERSATION_ID");
-    
+    println!(
+        "{}: {}",
+        "Usage".yellow().bold(),
+        "To view a conversation, run: ./claude-viewer CONVERSATION_ID"
+    );
+
     Ok(())
 }
 
@@ -120,12 +163,12 @@ fn truncate_string(s: &str, max_len: usize) -> String {
         for (idx, _) in s.char_indices().take(max_len) {
             end_idx = idx;
         }
-        
+
         // Find the next character's starting position to determine where to cut
         if let Some((next_idx, _)) = s.char_indices().skip(max_len).next() {
             end_idx = next_idx;
         }
-        
+
         format!("{}...", &s[..end_idx])
     }
 }
@@ -139,7 +182,7 @@ fn format_json_output(text: &str) {
                 Ok(pretty) => println!("{}", pretty),
                 Err(_) => println!("{}", text),
             }
-        },
+        }
         Err(_) => {
             // If not valid JSON, print the original text
             println!("{}", text);
