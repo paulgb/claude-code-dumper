@@ -121,7 +121,7 @@ fn main() -> Result<()> {
 
     println!("{}", "Conversation Summaries:".cyan().bold());
     println!("{}", "----------------------".cyan());
-    for (id, summary_text, timestamp, first_message) in summaries {
+    for (id, summary_text, timestamp, first_message, message_count) in summaries {
         // Truncate first message to first 50 characters using the helper function
         let truncated_message = truncate_string(&first_message, 50);
 
@@ -133,6 +133,7 @@ fn main() -> Result<()> {
             format_timestamp(timestamp)
         );
         println!("{}: {}", "First Message".yellow().bold(), truncated_message);
+        println!("{}: {}", "Messages".yellow().bold(), message_count);
         println!("{}", "----------------------".cyan());
     }
 

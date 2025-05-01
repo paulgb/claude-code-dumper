@@ -80,8 +80,8 @@ impl ClaudeDatabase {
         Self::connect_with_path(None)
     }
 
-    /// Gets all conversation summaries from the database with timestamp and first message
-    pub fn get_conversation_summaries(&self) -> Result<Vec<(String, String, i64, String)>> {
+    /// Gets all conversation summaries from the database with timestamp, first message, and message count
+    pub fn get_conversation_summaries(&self) -> Result<Vec<(String, String, i64, String, usize)>> {
         let mut stmt = self
             .conn
             .prepare("SELECT leaf_uuid, summary FROM conversation_summaries")?;
@@ -114,7 +114,10 @@ impl ClaudeDatabase {
                     None => String::new(), // Shouldn't happen since we checked messages isn't empty
                 };
 
-                summaries.push((leaf_uuid, summary, leaf_timestamp, first_message));
+                // Get the message count
+                let message_count = messages.len();
+
+                summaries.push((leaf_uuid, summary, leaf_timestamp, first_message, message_count));
             }
         }
 
