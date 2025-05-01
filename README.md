@@ -1,8 +1,13 @@
 # Claude Viewer
 
-A command-line tool for viewing Claude API conversation history.
+A command-line tool for dumping Claude API sessions, including raw tool calls and LLM requests/responses.
+
+This is mostly intended for people who are curious in "opening up the hood" of Claude and seeing the queries it issues internally.
 
 ## Installation
+
+Prerequisites: [Rust](https://www.rust-lang.org/tools/install), Claude Code. This has not been tested on Windows; PRs welcome if
+it doesn't work.
 
 You can install Claude Viewer using Cargo:
 
@@ -21,9 +26,6 @@ claude-viewer
 
 # View a specific conversation by ID
 claude-viewer CONVERSATION_ID
-
-# View raw output (no JSON formatting)
-claude-viewer CONVERSATION_ID --raw
 ```
 
 Alternatively, you can run without installing:
@@ -32,17 +34,8 @@ Alternatively, you can run without installing:
 # Run directly with Cargo
 cargo run
 cargo run CONVERSATION_ID
-cargo run CONVERSATION_ID -- --raw
 ```
-
-## Features
-
-- View a list of all saved conversations with summaries
-- Display detailed conversation history for a specific ID
-- View raw message content or formatted JSON
-- Displays timing, model, and cost information for each request
 
 ## Credits
 
 Shamelessly vibecoded with Claude Code.
-
