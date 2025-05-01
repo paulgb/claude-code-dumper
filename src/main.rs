@@ -51,22 +51,20 @@ fn main() -> Result<()> {
         for message in messages {
             match message {
                 Message::User {
-                    message,
-                    timestamp,
-                    tool_use_result,
+                    ref tool_use_result,
                     ..
                 } => {
                     println!(
                         "{}",
-                        format!("User [{}]:", format_timestamp(timestamp))
+                        format!("User [{}]:", format_timestamp(message.timestamp()))
                             .green()
                             .bold()
                     );
 
                     if args.raw {
-                        println!("{}", message);
+                        println!("{}", message.message());
                     } else {
-                        format_json_output(&message);
+                        format_json_output(message.message());
                     }
 
                     if let Some(tool_result) = tool_use_result {
@@ -80,9 +78,7 @@ fn main() -> Result<()> {
                     }
                 }
                 Message::Assistant {
-                    message,
-                    timestamp,
-                    model,
+                    ref model,
                     cost_usd,
                     duration_ms,
                     ..
@@ -91,7 +87,7 @@ fn main() -> Result<()> {
                         "{}",
                         format!(
                             "Assistant [{}] [{}] [${:.6}] [{}ms]:",
-                            format_timestamp(timestamp),
+                            format_timestamp(message.timestamp()),
                             model,
                             cost_usd,
                             duration_ms
@@ -101,9 +97,9 @@ fn main() -> Result<()> {
                     );
 
                     if args.raw {
-                        println!("{}", message);
+                        println!("{}", message.message());
                     } else {
-                        format_json_output(&message);
+                        format_json_output(message.message());
                     }
                 }
             }
@@ -114,26 +110,38 @@ fn main() -> Result<()> {
     }
 
     // Print conversation summaries
-    let mut summaries = db.get_conversation_summaries()?;
+    let mut summaries = db.get_conversations()?;
 
-    // Sort conversations by timestamp chronologically
-    summaries.sort_by(|a, b| a.2.cmp(&b.2));
+    // Sort conversations by timestamp chronologically (oldest first)
+    summaries.sort_by_key(|a| a.timestamp);
 
-    println!("{}", "Conversation Summaries:".cyan().bold());
+    println!("{}", "Conversations (Root to Leaf):".cyan().bold());
     println!("{}", "----------------------".cyan());
-    for (id, summary_text, timestamp, first_message, message_count) in summaries {
+    for conversation in summaries {
         // Truncate first message to first 50 characters using the helper function
-        let truncated_message = truncate_string(&first_message, 50);
+        let truncated_message = truncate_string(&conversation.first_message, 50);
 
-        println!("{}: {}", "ID".yellow().bold(), id);
-        println!("{}: {}", "Summary".yellow().bold(), summary_text);
+        println!("{}: {}", "Leaf ID".yellow().bold(), conversation.leaf_id);
+        if let Some(summary) = conversation.summary {
+            println!("{}: {}", "Summary".yellow().bold(), summary);
+        } else {
+            println!(
+                "{}: {}",
+                "Summary".yellow().bold(),
+                "No summary available".black()
+            );
+        }
         println!(
             "{}: {}",
-            "Timestamp".yellow().bold(),
-            format_timestamp(timestamp)
+            "Last Activity".yellow().bold(),
+            format_timestamp(conversation.timestamp)
         );
         println!("{}: {}", "First Message".yellow().bold(), truncated_message);
-        println!("{}: {}", "Messages".yellow().bold(), message_count);
+        println!(
+            "{}: {}",
+            "Message Count".yellow().bold(),
+            conversation.message_count
+        );
         println!("{}", "----------------------".cyan());
     }
 
