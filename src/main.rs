@@ -15,14 +15,18 @@ struct Args {
     /// Raw output (no JSON formatting)
     #[arg(short, long)]
     raw: bool,
+    
+    /// Custom database path (defaults to ~/.claude/__store.db)
+    #[arg(short, long)]
+    database_path: Option<String>,
 }
 
 fn main() -> Result<()> {
     // Parse command line arguments
     let args = Args::parse();
     
-    // Create database connection
-    let db = ClaudeDatabase::connect()?;
+    // Create database connection with custom path if provided
+    let db = ClaudeDatabase::connect_with_path(args.database_path.as_deref())?;
     
     // If conversation_id is provided, display the conversation
     if let Some(id) = args.conversation_id {

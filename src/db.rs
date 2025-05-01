@@ -53,18 +53,31 @@ fn extract_content_from_json(json_str: &str) -> String {
 
 impl ClaudeDatabase {
     /// Creates a new database connection to the Claude store
-    pub fn connect() -> Result<Self> {
-        // Get user's home directory
-        let home_dir = env::var("HOME").expect("Failed to get home directory");
+    /// 
+    /// If `custom_path` is provided, it will be used instead of the default location.
+    pub fn connect_with_path(custom_path: Option<&str>) -> Result<Self> {
+        let db_path = match custom_path {
+            Some(path) => PathBuf::from(path),
+            None => {
+                // Get user's home directory
+                let home_dir = env::var("HOME").expect("Failed to get home directory");
+                
+                // Construct the default path to the SQLite database
+                PathBuf::from(home_dir).join(".claude").join("__store.db")
+            }
+        };
         
-        // Construct the path to the SQLite database
-        let db_path = PathBuf::from(home_dir).join(".claude").join("__store.db");
         println!("Opening database at: {}", db_path.display());
         
         // Connect to the SQLite database
         let conn = Connection::open(db_path)?;
         
         Ok(Self { conn })
+    }
+    
+    /// Creates a new database connection using the default path
+    pub fn connect() -> Result<Self> {
+        Self::connect_with_path(None)
     }
     
     /// Gets all conversation summaries from the database with timestamp and first message

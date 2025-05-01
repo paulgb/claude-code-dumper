@@ -41,3 +41,8 @@ cargo run CONVERSATION_ID -- --raw
 - Display detailed conversation history for a specific ID
 - View raw message content or formatted JSON
 - Displays timing, model, and cost information for each request
+
+## Credits
+
+Shamelessly vibecoded with Claude Code.
+
